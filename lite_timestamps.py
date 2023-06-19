@@ -22,6 +22,9 @@ def generate_timeline(username, password, date, hour, minutes, seconds):
     url = CLOUDAPI_BASE + condition + "&where=" + where
     #get response
     response = rq.get(url, headers=header)
+    if response.status_code != 200:
+        st.caption(":red[Wrong Username or Password]")
+        return
     events = response.json()["_items"]
     litesArray = []
     for lite in events:
