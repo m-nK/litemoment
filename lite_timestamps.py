@@ -4,7 +4,6 @@ import datetime
 import urllib.parse
 import pytz
 import base64
-import pyperclip
 
 CLOUDAPI_BASE = "https://rest.litemoment.com"
 THREE_HOURS_IN_SECONDS = 3 * 60 * 60
