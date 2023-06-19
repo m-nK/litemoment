@@ -7,7 +7,6 @@ import base64
 
 CLOUDAPI_BASE = "https://rest.litemoment.com"
 THREE_HOURS_IN_SECONDS = 3 * 60 * 60
-youtube_timeline = ""
 MAX_NUMBER_RESULTS = 100
 def generate_timeline(username, password, date, hour, minutes, seconds):
     youtube_timeline = ""
@@ -19,11 +18,8 @@ def generate_timeline(username, password, date, hour, minutes, seconds):
     b = (base64.b64encode(bytes(username + ":" + password,"utf-8"))).decode("utf-8")
     header = {"Authorization" : "Basic " + b}
     where = '{"$and":[{"eventTS":{"$gte":'+ str(timestamp) +'}},{"eventTS":{"$lte":' + str(timestamp + THREE_HOURS_IN_SECONDS) + "}}]}"
-    print(where)
     where = urllib.parse.quote(where)
-    print(where)
     url = CLOUDAPI_BASE + condition + "&where=" + where
-    print(url)
     #get response
     response = rq.get(url, headers=header)
     events = response.json()["_items"]
@@ -35,12 +31,11 @@ def generate_timeline(username, password, date, hour, minutes, seconds):
         if diff < 0:
             continue
         litesArray.append((str(datetime.timedelta(seconds = diff)), eventType))
-        litesArray = list(set(i for i in litesArray))
-        litesArray.sort(key = lambda x : x[0])
+    litesArray = list(set(i for i in litesArray))
+    litesArray.sort(key = lambda x : x[0])
     for t, a in litesArray:
         youtube_timeline += t + " " + a + "\n"
     st.code(youtube_timeline, language="python")
-    return youtube_timeline
 st.set_page_config(page_title = "Lite_timestamp", layout = "centered")
 st.subheader("Litemoment Youtube timestamp generator")
 st.write("---")
@@ -61,7 +56,7 @@ with minutes_in:
 with seconds_in:
     seconds = st.number_input("Seconds:", step = 1, min_value = 0, max_value = 59, on_change = None)
 if st.button("Generate timestamps", key="generate_timestamp"):
-    youtube_timeline = generate_timeline(username, password, date, hour, minutes, seconds)
+    generate_timeline(username, password, date, hour, minutes, seconds)
 
 
 
