@@ -8,10 +8,16 @@ import base64
 CLOUDAPI_BASE = "https://rest.litemoment.com"
 THREE_HOURS_IN_SECONDS = 3 * 60 * 60
 MAX_NUMBER_RESULTS = 100
-def generate_timeline(username, password, date, hour, minutes, seconds):
+HINDSIGHT_IN_SECONDS = 15
+#________________________________________functions______________________________________________________
+def generate_timeline(username, password, date, hour, minutes, seconds, with_event_type):
     youtube_timeline = ""
     timezone = pytz.timezone("America/Los_Angeles")
-    absolute_time = datetime.datetime(date.year, date.month, date.day, hour, minutes, seconds)
+    try:
+        absolute_time = datetime.datetime(date.year, date.month, date.day, hour, minutes, seconds)
+    except:
+        st.error("invalid time input")
+        return
     absolute_time_tz = timezone.localize(absolute_time)
     timestamp = int(absolute_time_tz.timestamp())
     condition = "/events?sort=-eventTS&max_results=" + str(MAX_NUMBER_RESULTS)
@@ -23,43 +29,50 @@ def generate_timeline(username, password, date, hour, minutes, seconds):
     #get response
     response = rq.get(url, headers=header)
     if response.status_code != 200:
-        st.caption(":red[Wrong Username or Password]")
+        st.error("Wrong Username or Password")
         return
-    events = response.json()["_items"]
+    try: 
+        events = response.json()["_items"]
+    except:
+        st.error("invalid time input")
+        return
     litesArray = []
     for lite in events:
         eventType = lite["eventType"]
         eventTS = lite["eventTS"]
-        diff = eventTS - timestamp
+        #apply hindsight offset
+        diff = eventTS - timestamp - HINDSIGHT_IN_SECONDS
         if diff < 0:
-            continue
+            diff = 0
         litesArray.append((str(datetime.timedelta(seconds = diff)), eventType))
     litesArray = list(set(i for i in litesArray))
     litesArray.sort(key = lambda x : x[0])
     for t, a in litesArray:
-        youtube_timeline += t + " " + a + "\n"
+        youtube_timeline += t + " " + a + "\n" if with_event_type else t + "\n"
     st.code(youtube_timeline, language="python")
-st.set_page_config(page_title = "Lite_timestamp", layout = "centered")
-st.subheader("Litemoment Youtube timestamp generator")
-st.write("---")
-user_in, pass_in = st.columns(2)
-with user_in:
+#________________________________________start_of_homepage______________________________________________________
+st.set_page_config(page_title = "Hindsight Seconds", layout = "wide")
+st.title("Hindsight Seconds")
+# st.write("---")
+st.markdown("""
+    1. Enter Litemoment credentials.
+    2. Enter the start time of the recorded video.
+    3. Click generate!
+    """)
+with st.sidebar:
     username = st.text_input("Enter username")
-with pass_in:
     password = st.text_input("Enter password", type="password")
-st.write("---")
-st.write("Please enter the start time of the video:")
-date_in, hour_in, minutes_in, seconds_in = st.columns(4)
-with date_in:
+    st.write("---")
+    st.write("Please enter the start time of the video:")
     date = st.date_input("Date:")
-with hour_in:
     hour = st.number_input("Hour:", step = 1, min_value = 0, max_value = 23, on_change = None)
-with minutes_in:
     minutes = st.number_input("Minutes:", step = 1, min_value = 0, max_value = 59, on_change = None)
-with seconds_in:
     seconds = st.number_input("Seconds:", step = 1, min_value = 0, max_value = 59, on_change = None)
-if st.button("Generate timestamps", key="generate_timestamp"):
-    generate_timeline(username, password, date, hour, minutes, seconds)
+    with_event_type = st.checkbox("Include Event Type")
+    st.write("##")
+    generate = st.button("Generate timestamps", key="generate_timestamp")
+if generate:
+    generate_timeline(username, password, date, hour, minutes, seconds, with_event_type)
 
 
 
