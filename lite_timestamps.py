@@ -9,9 +9,10 @@ CLOUDAPI_BASE = "https://rest.litemoment.com"
 THREE_HOURS_IN_SECONDS = 3 * 60 * 60
 MAX_NUMBER_RESULTS = 100
 DEFAULT_MAP = {"LITE":"LITE", "VAR":"VAR", "HADD":"HADD"}
+DEFAULT_TO_REPETITION_TIME = 5
 #________________________________________functions______________________________________________________
 def generate_timeline(username, password, date, hour, minutes, seconds, with_event_type, hindsight):
-    timezone = pytz.timezone("America/Los_Angeles")
+    #erroneous input handling
     try:
         absolute_time = datetime.datetime(date.year, date.month, date.day, hour, minutes, seconds)
     except:
@@ -20,8 +21,11 @@ def generate_timeline(username, password, date, hour, minutes, seconds, with_eve
     if hindsight < 0 or hindsight > 60:
         st.error("Undefined Value")
         return
+    #time conversion
+    timezone = pytz.timezone("America/Los_Angeles")
     absolute_time_tz = timezone.localize(absolute_time)
     timestamp = int(absolute_time_tz.timestamp())
+    #generate uri
     condition = "/events?sort=-eventTS&max_results=" + str(MAX_NUMBER_RESULTS)
     b = (base64.b64encode(bytes(username + ":" + password,"utf-8"))).decode("utf-8")
     header = {"Authorization" : "Basic " + b}
@@ -38,6 +42,7 @@ def generate_timeline(username, password, date, hour, minutes, seconds, with_eve
     except:
         st.error("invalid time input")
         return
+    #generate output
     litesArray = []
     for lite in events:
         eventType = lite["eventType"]
@@ -46,12 +51,19 @@ def generate_timeline(username, password, date, hour, minutes, seconds, with_eve
         diff = eventTS - timestamp - hindsight
         if diff < 0:
             diff = 0
-        litesArray.append((str(datetime.timedelta(seconds = diff)), eventType))
+        litesArray.append((diff, eventType))
+    #post-processing output
     litesArray = list(set(i for i in litesArray))
     litesArray.sort(key = lambda x : x[0])
+    last_time = -1
     for t, a in litesArray:
+        if last_time != -1:
+            if t - last_time <= DEFAULT_TO_REPETITION_TIME:
+                continue
+        last_time = t
         mapped = st.session_state.event_type_map[a] if a in st.session_state.event_type_map else ""
-        st.session_state.timeline += t + " " + mapped + "\n" if with_event_type else t + "\n"
+        time_formatted = str(datetime.timedelta(seconds = t))
+        st.session_state.timeline += time_formatted + " " + mapped + "\n" if with_event_type else time_formatted + "\n"
 #________________________________________start_of_homepage______________________________________________________
 st.set_page_config(page_title = "Hindsight Seconds", layout = "wide")
 st.title("Litemoment Youtube Timestamp Generator")
@@ -81,30 +93,22 @@ with st.sidebar:
     with_event_type = st.checkbox("Include Event Type", key="include_eventtype", value = True)
     if st.session_state.include_eventtype:
         "Translate Event Type"
-        col1, col2, col3 = st.columns(3)
-        with col1:
+        lite_col, var_col, hadd_col = st.columns(3)
+        with lite_col:
             new_lite = st.text_input("LITE:", value = st.session_state.event_type_map["LITE"])
-        with col2:
+        with var_col:
             new_var = st.text_input("VAR:", value = st.session_state.event_type_map["VAR"])
-        with col3:
+        with hadd_col:
             new_hadd = st.text_input("HADD:", value = st.session_state.event_type_map["HADD"])
-        change_col, _, reset_col = st.columns(3)
-        with change_col:
-            change_button = st.button("Change", key="change_button", use_container_width = True)
-        with reset_col:
-            reset_button = st.button("Reset", key="reset_button", use_container_width = True)
     st.write("---")
     generate = st.button("Generate timestamps", key="generate_timestamp")
-if st.session_state.include_eventtype:
-    if change_button:
+if generate:
+    st.session_state.timeline = ""
+    st.session_state.show_timeline = True
+    if st.session_state.include_eventtype:
         st.session_state.event_type_map["LITE"] = new_lite
         st.session_state.event_type_map["VAR"] = new_var
         st.session_state.event_type_map["HADD"] = new_hadd
-    if reset_button:
-        st.session_state.event_type_map = DEFAULT_MAP
-if generate:
-    st.session_state.timeline = ""
     generate_timeline(username, password, date, hour, minutes, seconds, with_event_type, hindsight)
-    st.session_state.show_timeline = True
 if st.session_state.show_timeline and st.session_state.timeline:
     st.code(st.session_state.timeline, language="python")
