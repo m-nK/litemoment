@@ -8,9 +8,8 @@ import base64
 CLOUDAPI_BASE = "https://rest.litemoment.com"
 THREE_HOURS_IN_SECONDS = 3 * 60 * 60
 MAX_NUMBER_RESULTS = 100
-HINDSIGHT_IN_SECONDS = 15
 #________________________________________functions______________________________________________________
-def generate_timeline(username, password, date, hour, minutes, seconds, with_event_type):
+def generate_timeline(username, password, date, hour, minutes, seconds, with_event_type, hindsight):
     # youtube_timeline = ""
     timezone = pytz.timezone("America/Los_Angeles")
     try:
@@ -41,7 +40,7 @@ def generate_timeline(username, password, date, hour, minutes, seconds, with_eve
         eventType = lite["eventType"]
         eventTS = lite["eventTS"]
         #apply hindsight offset
-        diff = eventTS - timestamp - HINDSIGHT_IN_SECONDS
+        diff = eventTS - timestamp - hindsight
         if diff < 0:
             diff = 0
         litesArray.append((str(datetime.timedelta(seconds = diff)), eventType))
@@ -51,7 +50,7 @@ def generate_timeline(username, password, date, hour, minutes, seconds, with_eve
         st.session_state.timeline += t + " " + a + "\n" if with_event_type else t + "\n"
 #________________________________________start_of_homepage______________________________________________________
 st.set_page_config(page_title = "Hindsight Seconds", layout = "wide")
-st.title("Hindsight Seconds")
+st.title("Litemoment Youtube Timestamp Generator")
 # st.write("---")
 st.markdown("""
     1. Enter Litemoment credentials.
@@ -71,12 +70,13 @@ with st.sidebar:
     hour = st.number_input("Hour:", step = 1, min_value = 0, max_value = 23)
     minutes = st.number_input("Minutes:", step = 1, min_value = 0, max_value = 59)
     seconds = st.number_input("Seconds:", step = 1, min_value = 0, max_value = 59)
+    hindsight = st.number_input("Hindsight Seconds:", min_value = 5, max_value = 60, value = 15, step = 5)
     with_event_type = st.checkbox("Include Event Type", key="include_eventtype", value = True)
     st.write("##")
     generate = st.button("Generate timestamps", key="generate_timestamp")
 if generate:
     st.session_state.timeline = ""
-    generate_timeline(username, password, date, hour, minutes, seconds, with_event_type)
+    generate_timeline(username, password, date, hour, minutes, seconds, with_event_type, hindsight)
     st.session_state.show_timeline = True
 if st.session_state.show_timeline and st.session_state.timeline:
     st.code(st.session_state.timeline, language="python")
