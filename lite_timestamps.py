@@ -102,7 +102,6 @@ if st.session_state.include_eventtype:
         st.session_state.event_type_map["HADD"] = new_hadd
     if reset_button:
         st.session_state.event_type_map = DEFAULT_MAP
-st.session_state
 if generate:
     st.session_state.timeline = ""
     generate_timeline(username, password, date, hour, minutes, seconds, with_event_type, hindsight)
