@@ -99,7 +99,7 @@ with st.sidebar:
         with var_col:
             new_var = st.text_input("VAR:", value = st.session_state.event_type_map["VAR"])
         with hadd_col:
-            new_hadd = st.text_input("HADD:", value = st.session_state.event_type_map["HADD"])
+            new_hadd = st.text_input("HADD:", value = st.session_state.event_type_map["GOAL"])
     st.write("---")
     generate = st.button("Generate timestamps", key="generate_timestamp")
 if generate:
