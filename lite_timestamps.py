@@ -8,7 +8,7 @@ import base64
 CLOUDAPI_BASE = "https://rest.litemoment.com"
 THREE_HOURS_IN_SECONDS = 3 * 60 * 60
 MAX_NUMBER_RESULTS = 100
-DEFAULT_MAP = {"LITE":"LITE", "VAR":"VAR", "HADD":"HADD"}
+DEFAULT_MAP = {"LITE":"LITE", "VAR":"VAR", "HADD":"GOAL"}
 DEFAULT_TO_REPETITION_TIME = 5
 #________________________________________functions______________________________________________________
 def generate_timeline(username, password, date, hour, minutes, seconds, with_event_type, hindsight):
@@ -99,7 +99,7 @@ with st.sidebar:
         with var_col:
             new_var = st.text_input("VAR:", value = st.session_state.event_type_map["VAR"])
         with hadd_col:
-            new_hadd = st.text_input("HADD:", value = st.session_state.event_type_map["GOAL"])
+            new_hadd = st.text_input("HADD:", value = st.session_state.event_type_map["HADD"])
     st.write("---")
     generate = st.button("Generate timestamps", key="generate_timestamp")
 if generate:
