@@ -65,7 +65,7 @@ def generate_timeline(username, password, date, hour, minutes, seconds, with_eve
         time_formatted = str(datetime.timedelta(seconds = t))
         st.session_state.timeline += time_formatted + " " + mapped + "\n" if with_event_type else time_formatted + "\n"
 #________________________________________start_of_homepage______________________________________________________
-st.set_page_config(page_title = "Hindsight Seconds", layout = "wide")
+st.set_page_config(page_title = "Litemoment Youtube Timestamp Generator", layout = "wide")
 st.title("Litemoment Youtube Timestamp Generator")
 st.markdown("""
     1. Enter Litemoment credentials.
