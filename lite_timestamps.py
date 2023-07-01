@@ -4,6 +4,10 @@ import datetime
 import urllib.parse
 import pytz
 import base64
+import numpy as np
+import cv2
+from PIL import Image
+from aruco import read
 
 CLOUDAPI_BASE = "https://rest.litemoment.com"
 THREE_HOURS_IN_SECONDS = 3 * 60 * 60
@@ -65,7 +69,7 @@ def generate_timeline(username, password, date, hour, minutes, seconds, with_eve
         time_formatted = str(datetime.timedelta(seconds = t))
         st.session_state.timeline += time_formatted + " " + mapped + "\n" if with_event_type else time_formatted + "\n"
 #________________________________________start_of_homepage______________________________________________________
-st.set_page_config(page_title = "Litemoment Youtube Timestamp Generator", layout = "wide")
+# st.set_page_config(page_title = "Litemoment Youtube Timestamp Generator", layout = "wide")
 st.title("Litemoment Youtube Timestamp Generator")
 st.markdown("""
     1. Enter Litemoment credentials.
@@ -81,8 +85,9 @@ if "event_type_map" not in st.session_state:
     st.session_state.event_type_map = DEFAULT_MAP
 #sidebar
 with st.sidebar:
-    username = st.text_input("Enter username")
-    password = st.text_input("Enter password", type="password")
+    username = st.text_input("Enter username", autocomplete="")
+    password = st.text_input("Enter password", type="password", autocomplete="")
+    uploaded_file = st.file_uploader("Choose a file with scorepad lite", type=["png","jpg","jpeg","JPG"])
     st.write("---")
     st.write("Please enter the start time of the video:")
     date = st.date_input("Date:")
@@ -112,3 +117,15 @@ if generate:
     generate_timeline(username, password, date, hour, minutes, seconds, with_event_type, hindsight)
 if st.session_state.show_timeline and st.session_state.timeline:
     st.code(st.session_state.timeline, language="python")
+if uploaded_file is not None:
+    # bytes_data = uploaded_file.getvalue()
+    # print(bytes_data)
+    image = Image.open(uploaded_file)
+    # rotated = image.rotate(-90)
+    img_array = np.array(image)
+    # img_array = np.rot90(img_array, k=3)
+    # r,g,b = cv2.split(img_array)
+    st.image(img_array)
+    # st.image(rotated)
+    st.write(read(img_array))
+    # st.image(image)
