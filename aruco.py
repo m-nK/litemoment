@@ -64,7 +64,7 @@ def four_point_transform(image, pts):
     warped = cv2.warpPerspective(image, M, (maxWidth, maxHeight))
     return warped
 def detect_code(image):
-    print(image)
+    # print(image)
     if image.ndim != 3:
         st.write("wrong image format")
     if image.shape[2] == 3:
@@ -79,13 +79,19 @@ def detect_code(image):
     arucoDict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
     arucoParams = cv2.aruco.DetectorParameters()
     detector = cv2.aruco.ArucoDetector(arucoDict, arucoParams)
-    (corners, ids, rejected) = cv2.aruco.detectMarkers(image, arucoDict, parameters=arucoParams)
+    # st.write(cv2.__version__)
+    # (corners, ids, rejected) = cv2.aruco.detectMarkers(image, arucoDict, parameters=arucoParams)
+    # (corners, ids, rejected) = cv2.aruco.ArucoDetector.detectMarkers(image, arucoDict, parameters=arucoParams)
+    # (corners, ids, rejected) = cv2.aruco.ArucoDetector.detectMarkers(image)
+    (corners, ids, rejected) = detector.detectMarkers(image)
+
     # cv2.aruco.drawDetectedMarkers(image, corners, ids)
     # cv2.imshow("orig", image)
     # cv2.waitKey()
     # cv2.destroyAllWindows()
     if len(corners) > 0:
-        st.write("code detected")
+        # st.write("code detected")___________________________________________________________________________________________________________________________________________________
+        st.warning("code detected", icon="☑️")
         ids = ids.flatten()
         # loop over the detected ArUCo corners
         for (markerCorner, markerID) in zip(corners, ids):
@@ -103,15 +109,16 @@ def detect_code(image):
                 # bottomRight_new = (topRight[0] + (topRight[0] - topLeft[0]) * 7, bottomLeft[1] + (bottomLeft[1] - topLeft[1]) * 4)
 
                 # corners_new = np.array([list(topLeft), list(topRight_new), list(bottomRight_new), list(bottomLeft_new)])
-                corners[1][0] = topLeft[0] + (topRight[0] - topLeft[0]) * 8
-                corners[1][1] = topLeft[1] + (topRight[1] - topLeft[1]) * 8
+                corners[0][1] = topLeft[1] - (bottomLeft[1] - topLeft[1])
+                corners[1][0] = topLeft[0] + (topRight[0] - topLeft[0]) * 15
+                corners[1][1] = topLeft[1] + (topRight[1] - topLeft[1]) * 15 - (bottomLeft[1] - topLeft[1])
                 # corners[2][0] = topLeft[0] + (bottomRight[0] - topLeft[0]) * 8
                 # corners[2][1] = topLeft[1] + (bottomRight[1] - topLeft[1]) * 8
-                corners[2][0] = topLeft[0] + (topRight[0] - topLeft[0]) * 8 + (bottomLeft[0] - topLeft[0]) * 4
-                corners[2][1] = topLeft[1] + (bottomLeft[1] - topLeft[1]) * 4 + (topRight[1] - topLeft[1]) * 8
+                corners[2][0] = topLeft[0] + (topRight[0] - topLeft[0]) * 15 + (bottomLeft[0] - topLeft[0]) * 4
+                corners[2][1] = topLeft[1] + (bottomLeft[1] - topLeft[1]) * 4 + (topRight[1] - topLeft[1]) * 15
                 corners[3][0] = topLeft[0] + (bottomLeft[0] - topLeft[0]) * 4
                 corners[3][1] = topLeft[1] + (bottomLeft[1] - topLeft[1]) * 4
-                print(corners)
+                # print(corners)
 
 
 
@@ -126,16 +133,17 @@ def detect_code(image):
                 # new = image[topLeft[1] : bottomLeft[1] - (topLeft[1] - bottomLeft[1]) * 4, topLeft[0] : topRight[0] + (topRight[0] - topLeft[0]) * 7, :]
             # print(topLeft[1] , bottomLeft[1] - (topLeft[1] - bottomLeft[1]) * 4, topLeft[0] , topRight[0] + (topRight[0] - topLeft[0]) * 7)
                 new = four_point_transform(image,corners)
-                st.image(new)
+                # st.image(new)___________________________________________________________________________________________________________________________________________________
                 return new
-        st.write("no valid code detected")
+        # st.write("no valid code detected")
+        st.warning("no valid code detected", icon="⚠️☑️")
     else:
-        st.write("no code detected")
+        # st.write("no code detected")
+        st.warning("no code detected", icon="⚠️")
     return image
 def read(img):
     newimg = detect_code(img)
     return detect_digit(newimg, True)
-# image = cv2.imread("testa.jpeg")
-# new = detect_code(image)
-# print(detect_digit(new, True))
+# image = cv2.imread("testg.jpeg")
+# new = det
 

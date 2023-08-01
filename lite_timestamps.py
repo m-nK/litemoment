@@ -127,5 +127,6 @@ if uploaded_file is not None:
     # r,g,b = cv2.split(img_array)
     st.image(img_array)
     # st.image(rotated)
-    st.write(read(img_array))
+    st.code(read(img_array), language="python")
+    # st.write(read(img_array))
     # st.image(image)
