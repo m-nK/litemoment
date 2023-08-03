@@ -136,7 +136,7 @@ def detect_code(image):
                 # st.image(new)___________________________________________________________________________________________________________________________________________________
                 return new
         # st.write("no valid code detected")
-        st.warning("no valid code detected", icon="⚠️☑️")
+        st.warning("no valid code detected", icon="⚠️")
     else:
         # st.write("no code detected")
         st.warning("no code detected", icon="⚠️")

@@ -1,5 +1,5 @@
 # -*- coding:utf-8 -*-
-
+import pytesseract
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
@@ -34,7 +34,37 @@ parser = argparse.ArgumentParser()
 parser.add_argument('image_path', help='path to image')
 parser.add_argument('-s', '--show_image', action='store_const', const=True, help='whether to show image')
 parser.add_argument('-d', '--is_debug', action='store_const', const=True, help='True or False')
-
+def four_point_transform(image, pts):
+    # obtain a consistent order of the points and unpack them
+    # individually
+    # rect = order_points(pts)
+    (tl, tr, br, bl) = pts
+    # compute the width of the new image, which will be the
+    # maximum distance between bottom-right and bottom-left
+    # x-coordiates or the top-right and top-left x-coordinates
+    widthA = np.sqrt(((br[0] - bl[0]) ** 2) + ((br[1] - bl[1]) ** 2))
+    widthB = np.sqrt(((tr[0] - tl[0]) ** 2) + ((tr[1] - tl[1]) ** 2))
+    maxWidth = max(int(widthA), int(widthB))
+    # compute the height of the new image, which will be the
+    # maximum distance between the top-right and bottom-right
+    # y-coordinates or the top-left and bottom-left y-coordinates
+    heightA = np.sqrt(((tr[0] - br[0]) ** 2) + ((tr[1] - br[1]) ** 2))
+    heightB = np.sqrt(((tl[0] - bl[0]) ** 2) + ((tl[1] - bl[1]) ** 2))
+    maxHeight = max(int(heightA), int(heightB))
+    # now that we have the dimensions of the new image, construct
+    # the set of destination points to obtain a "birds eye view",
+    # (i.e. top-down view) of the image, again specifying points
+    # in the top-left, top-right, bottom-right, and bottom-left
+    # order
+    dst = np.array([
+        [0, 0],
+        [maxWidth - 1, 0],
+        [maxWidth - 1, maxHeight - 1],
+        [0, maxHeight - 1]], dtype = "float32")
+    # compute the perspective transform matrix and then apply it
+    M = cv2.getPerspectiveTransform(pts, dst)
+    warped = cv2.warpPerspective(image, M, (maxWidth, maxHeight))
+    return warped
 def load_image(image, show=False):
     # todo: crop image and clear dc and ac signal
     # img = cv2.imread(path)
@@ -377,7 +407,7 @@ def find_copy(img):
         # cv2.drawContours(temp, [bounds[i][2]], 0, 100, 20)
         # st.image(temp)
         if i > 0 and bounds[i][0][0] > new_contour[-1][0][0] and bounds[i][1][0] < new_contour[-1][1][0]:
-            if cv2.contourArea(bounds[i][2]) * 4 > cv2.contourArea(new_contour[-1][2]):
+            if cv2.contourArea(bounds[i][2]) * 10 > cv2.contourArea(new_contour[-1][2]):
                 big_holes.append(bounds[i][2])
             continue
         else:
@@ -459,8 +489,81 @@ def detect_digit(image, show_image):
     #         continue
     #     else:
     #         newdigits.append(digits_positions[i])
-    digits = recognize_digits_line_method(digits_positions, output, dst)
+    digits = recognize_digits_line_method(digits_positions, output, dst)#______________________________________________________________________________________________________________________________
     
+
+
+
+    # leftmost = digits_positions[0]
+    # rightmost = digits_positions[-1]
+    # fourpoints = np.array([digits_positions[0][0], [digits_positions[-1][1][0], digits_positions[-1][0][1]], digits_positions[-1][1], [digits_positions[0][0][0], digits_positions[0][1][1]]])
+    # fourpoints = fourpoints.reshape((4, 2))
+    # st.write(fourpoints)
+    # st.image(dst)
+    # dst = four_point_transform(dst, fourpoints)
+    
+    # st.image(dst)
+    result1 = pytesseract.image_to_string(dst, lang="ssd", config='--psm 7 --oem 3 -c tessedit_char_whitelist=0123456789-')
+    st.code("Results from Tesseract:" + str(result1))
+    # digits = ""
+    # for contour in digits_positions:
+    #     # # Get the bounding rectangle of the contour
+    #     # x, y, w, h = cv2.boundingRect(contour)
+        
+    #     # # Extract the region of interest (ROI)
+    #     # roi = binary[y:y+h, x:x+w]
+        
+    #     # Set the configuration for Tesseract OCR
+    #     # config = "--psm 7"  # Treat ROI as a single line of text a
+    #     # x, y, w, h = cv2.boundingRect(contour)
+        
+    #     # Extract the region of interest (ROI)
+    #     # st.write(contour)
+    #     x0, y0 = contour[0]
+    #     x1, y1 = contour[1]
+    #     roi = dst[y0:y1, x0:x1]
+    #     h, w = roi.shape
+    #     suppose_W = max(1, int(h / H_W_Ratio))
+
+    #     # 消除无关符号干扰
+    #     if x1 - x0 < 25 and cv2.countNonZero(roi) / ((y1 - y0) * (x1 - x0)) < 0.2:
+    #         continue
+    #     if w > h:
+    #         continue
+    #     # st.write(w)
+    #     # st.write(h)
+    #     # st.write(suppose_W)
+    #     # 对1的情况单独识别
+    #     if w < suppose_W / 1.6:
+    #         x0 = max(x0 + w - suppose_W, 0)
+    #         roi = dst[y0:y1, x0:x1]
+    #         w = roi.shape[1]
+    #     # roi = dst[contour[0][1]:contour[1][1], contour[0][0]:contour[1][0]]
+    #     st.write(contour)
+    #     st.write(contour[1][1] - contour[0][1])
+    #     st.write(contour[1][0] - contour[0][0])
+    #     if contour[1][1] - contour[0][1] < contour[1][0] - contour[0][0]:
+    #         st.write("ASDIKJHJKSHADKJHASKDJHDHAKSJDHA")
+    #         continue
+    #     # roi = dst[y:y+h, x:x+w]
+    #     roi= np.invert(roi)
+    #     st.image(roi)
+    #     config = "--psm 10"  # Treat ROI as a single line of text
+        
+    #     # Perform OCR on the ROI
+    #     # result = pytesseract.image_to_string(roi, config=config, lang="./7seg.traineddata")
+    #     result = pytesseract.image_to_string(roi, lang="ssd", config='--psm 10 --oem 3 -c tessedit_char_whitelist=0123456789')
+    #     st.write(result)
+    #     digits += result.strip()
+
+
+
+
+
+
+
+    
+    # st.write(digits)
 
 
     # st.write(digits)______________________________________________________________________________________________________________________________
@@ -475,7 +578,7 @@ def detect_digit(image, show_image):
             #         time_out += "1"
             #         continue
             if count == 2:
-                time_out += ":"
+                time_out += "-"
                 count = 0
             time_out += "1" if count == 0 and c == 8 else str(c)
             count += 1
