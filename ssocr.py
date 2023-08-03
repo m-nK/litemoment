@@ -502,8 +502,9 @@ def detect_digit(image, show_image):
     # st.image(dst)
     # dst = four_point_transform(dst, fourpoints)
     
-    # st.image(dst)
-    result1 = pytesseract.image_to_string(dst, lang="ssd", config='--psm 7 --oem 3 -c tessedit_char_whitelist=0123456789-')
+    st.image(dst)
+    # tessdata_dir_config = '--tessdata-dir "./"'
+    result1 = pytesseract.image_to_string(dst, lang="7seg", config= ' --tessdata-dir "./modeldata" --psm 7 --oem 3 -c tessedit_char_whitelist=0123456789-')
     st.code("Results from Tesseract:" + str(result1))
     # digits = ""
     # for contour in digits_positions:
